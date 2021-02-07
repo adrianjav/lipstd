@@ -17,6 +17,11 @@ likelihood.train()
 scaler = LipschitzScaler(likelihood, 1 / 0.001)
 scaler.fit(data)
 
+# For MNIST you could do something like this
+# likelihood = LikelihoodFlatten(GammaTrick(Bernoulli(domain_size=784)))
+# scaler = LipschitzScaler(likelihood, 1. / args.learning_rate)
+# scaler.fit(data_loader.dataset.data.flatten(start_dim=1) / 255.)
+
 print("Likelihood: 'gamma', 'normal', 'categorical(3)', 'categorical(2)*', 'bernoulli*', 'poisson*'")
 pos = 0
 for i, l in enumerate(likelihood):
