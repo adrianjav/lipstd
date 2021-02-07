@@ -30,7 +30,6 @@ class LipschitzScaler(object):
                 nonlocal hessian
                 dist.scale = torch.tensor(omega).float().exp()
                 lipschitz, hessian = dist.compute_lipschitz(data, hessian)
-                # print(dist.scale, lipschitz, sum(lipschitz))
                 return (sum(lipschitz).item() - goal) ** 2
 
             result = minimize_scalar(step, method='brent')

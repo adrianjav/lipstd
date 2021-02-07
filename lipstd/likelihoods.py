@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from functools import wraps, reduce
-from typing import Collection
+from functools import wraps
 
 import torch
 from torch import nn
@@ -11,6 +10,7 @@ from torch.distributions import constraints
 from torch.distributions.utils import probs_to_logits, logits_to_probs, broadcast_all
 
 from .utils import to_one_hot, flatten
+
 
 # TODO canonical params -> invert transform params
 
@@ -38,7 +38,7 @@ def get_likelihood(*dist_names, flatten=True):
     return cls(*dist_list)
 
 
-def get_distribution_by_name(name):  # TODO
+def get_distribution_by_name(name):
     is_gammatrick = name[-1] == '*'
     size = 0
     available_dists = {
@@ -468,15 +468,6 @@ class ExponentialFamily(BaseLikelihood):
         for jac_i in jacobian:
             row_i = grad(jac_i, params, retain_graph=True, create_graph=False)[0]
             hessian_rows.append(row_i.detach())
-        #
-        # print('rows', hessian_rows)
-        #
-        # params = self.params_from_data(self >> data)
-        # params = torch.stack(params)
-        # params.requires_grad = True
-        #
-        # func = lambda params: self(*params).log_prob(data).mean()  # for the exponential family we can take mean/sum
-        # print('hessian pytorch', torch.autograd.functional.hessian(func, params))
 
         self.ensure_args = old_value
         return hessian_rows
