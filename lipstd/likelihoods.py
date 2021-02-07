@@ -23,6 +23,8 @@ def get_likelihood(*dist_names, flatten=True):
     if len(dist_names) == 1:
         if isinstance(dist_names[0], str):
             return get_distribution_by_name(dist_names[0])
+        elif isinstance(dist_names[0], dict):
+            return get_distribution_by_name(**dist_names[0])
         elif len(dist_names[0]) == 1:
             return cls(get_likelihood(*dist_names[0], flatten=False))
         else:
@@ -38,7 +40,7 @@ def get_likelihood(*dist_names, flatten=True):
     return cls(*dist_list)
 
 
-def get_distribution_by_name(name):
+def get_distribution_by_name(name, *, domain_size=1, ensure_args=True):
     is_gammatrick = name[-1] == '*'
     size = 0
     available_dists = {
@@ -55,11 +57,14 @@ def get_distribution_by_name(name):
         name = name[:pos]
 
     if is_gammatrick and 'categorical' in name:
-        requested_dist = GammaTrickCategorical(size)
+        requested_dist = GammaTrickCategorical(size, ensure_args=ensure_args)
     else:
-        requested_dist = available_dists[name](size) if size > 0 else available_dists[name]()
+        if size > 0:
+            requested_dist = available_dists[name](size, ensure_args=ensure_args)
+        else:
+            requested_dist = available_dists[name](domain_size=domain_size, ensure_args=ensure_args)
         if is_gammatrick:
-            requested_dist = GammaTrick(requested_dist)
+            requested_dist = GammaTrick(requested_dist, ensure_args=ensure_args)
 
     return requested_dist
 
