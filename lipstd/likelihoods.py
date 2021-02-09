@@ -366,8 +366,8 @@ class LikelihoodList(BaseLikelihood):
 
                                 # special cases
                                 if isinstance(d, dist.Distribution):
-                                    # if d.event_shape == torch.Size([]) and item in ['sample', 'mean']:
-                                    #     result_d = result_d.unsqueeze(dim=-1)
+                                    if d.event_shape == torch.Size([]) and item in ['sample', 'mean']:
+                                        result_d = result_d.unsqueeze(dim=-1)
                                     if item in ['entropy']:  # special cases
                                         result_d = result_d.unsqueeze(dim=-1)
 
@@ -708,6 +708,10 @@ class GammaTrick(Gamma):
     @property
     def dist(self) -> type(dist.Distribution):
         return super().dist if self.training else self.og_dist.dist
+
+    @property
+    def is_discrete(self):
+        return not self.training
 
     def canonical_params(self, *params):
         gamma_params = super().canonical_params(*params)
