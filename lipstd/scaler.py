@@ -42,6 +42,11 @@ class BaseScaler(object):
         return self.likelihood
 
 
+class DummyScaler(BaseScaler):
+    def fit_single(self, data):
+        return 1.
+
+
 class StandardScaler(BaseScaler):
     def fit_single(self, data):
         return 1./data.std().item()
@@ -78,7 +83,7 @@ class LipschitzScaler(BaseScaler):
             lipschitz, hessian = dist.compute_lipschitz(data, hessian)
             return (sum(lipschitz).item() - goal) ** 2
 
-        result = minimize_scalar(step, method='brent')
+        result = minimize_scalar(step, method='brent', options={'xtol': 1e-10})
         assert result.success
         scale = torch.tensor(result.x).exp()
 

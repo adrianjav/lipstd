@@ -131,6 +131,7 @@ class BaseLikelihood(nn.Module):
         self.inverse_transform_params = self._ensure_params(self.inverse_transform_params)
         self.canonical_params = self._ensure_params(self.canonical_params)
         self.instantiate = self._ensure_params(self.instantiate)
+        self.get_params = self._ensure_params(self.get_params)
 
     @property
     def dist(self) -> type(dist.Distribution):
@@ -172,6 +173,9 @@ class BaseLikelihood(nn.Module):
 
     def inverse_transform_params(self, *params):
         raise NotImplementedError
+
+    def get_params(self, *params):
+        return params
 
     def instantiate(self, *params):
         def scale_input(func):
@@ -674,7 +678,7 @@ class Poisson(ExponentialFamily):
         return dist.Poisson
 
     def canonical_params(self, *params):
-        return torch.exp(params[0]),
+        return {'rate': torch.exp(params[0])}
 
     @property
     def scale_factors(self):
