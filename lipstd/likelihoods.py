@@ -709,10 +709,6 @@ class GammaTrick(Gamma):
     def dist(self) -> type(dist.Distribution):
         return super().dist if self.training else self.og_dist.dist
 
-    @property
-    def is_discrete(self):
-        return not self.training
-
     def canonical_params(self, *params):
         gamma_params = super().canonical_params(*params)
         if self.training:
@@ -775,6 +771,7 @@ class Categorical(ExponentialFamily):
 class OneHotCategorical(Categorical):
     def __init__(self, size, *, ensure_args=True):
         super(OneHotCategorical, self).__init__(size, ensure_args=ensure_args)
+        self.size = size
 
     @property
     def dist(self) -> type(dist.Distribution):
@@ -792,6 +789,7 @@ class GammaTrickCategorical(LikelihoodList):
         super(GammaTrickCategorical, self).__init__(*[
             GammaTrick(Bernoulli(domain_size=1, ensure_args=ensure_args)) for _ in range(size)
         ], ensure_args=ensure_args)
+        self.size = size
 
     @property
     def dist(self) -> type(dist.Distribution):
