@@ -22,9 +22,13 @@ class BaseScaler(object):
         pos = 0
         for d in self.likelihood:
             if not d.is_discrete:
+                # Reset the scale and preprocess (to account for things like dequantization)
+                d.scale = torch.ones_like(d.scale)
+                data_d = d >> data[..., pos: pos + d.domain_size]
+
                 scale_d = torch.empty_like(d.scale)
                 for i in range(d.domain_size):
-                    scale_d[i] = self.fit_single(data[..., pos + i])
+                    scale_d[i] = self.fit_single(data_d[..., i])
                     if self.verbose:
                         print(f'[x_{pos+i}] scale={scale_d[i]:.2f}')
                 d.scale = scale_d
