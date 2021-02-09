@@ -51,7 +51,7 @@ class LipschitzScaler(object):
 
             pos = 0
             for d in dists:
-                if isinstance(d, LikelihoodList):
+                if isinstance(d, LikelihoodList) and not d.is_discrete:
                     num_dists = sum([len(x) for x in d if not x.is_discrete])
                     fit_recursive(d, data[..., pos: pos + d.domain_size], goal / num_dists)
                 else:
@@ -64,4 +64,4 @@ class LipschitzScaler(object):
 
         num_dists = sum([d.domain_size for d in self.likelihood if not d.is_discrete])
         fit_recursive(self.likelihood, data, self.goal / num_dists)
-        return self.likelihood.scale
+        return self.likelihood
