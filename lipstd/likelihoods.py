@@ -543,7 +543,7 @@ class Normal(ExponentialFamily):
         params = self.params_from_data(self >> data)
         params = self.canonical_params(*params)
 
-        row_1 = torch.tensor([-params['loc'], -2 * params['loc'] * params['scale']**2])
+        row_1 = torch.tensor([-params['scale']**2, -2 * params['loc'] * params['scale']**2])
         row_2 = torch.tensor([row_1[1], -2 * params['scale']**2 * (params['scale']**2 + params['loc']**2)])
 
         self.ensure_args = old_value
