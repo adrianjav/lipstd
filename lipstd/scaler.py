@@ -28,7 +28,12 @@ class BaseScaler(object):
 
                 scale_d = torch.empty_like(d.scale)
                 for i in range(d.domain_size):
-                    scale_d[i] = self.fit_single(data_d[..., i])
+                    data_di = data_d[..., i]
+                    nans = torch.isnan(data_d)
+                    if sum(nans) > 0:
+                        data_di = torch.masked_select(data_di, ~nans)
+
+                    scale_d[i] = self.fit_single(data_di)
                     if self.verbose:
                         print(f'[x_{pos+i}] scale={scale_d[i]:.2f}')
                 d.scale = scale_d
@@ -98,7 +103,12 @@ class LipschitzScaler(BaseScaler):
                     fit_recursive(d, data[..., pos: pos + d.domain_size], goal / num_dists)
                 else:
                     for i in range(d.domain_size):
-                        self.fit_single(d, data[..., pos + i], goal, index=i)
+                        data_di = data[..., pos + i]
+                        nans = torch.isnan(data_di)
+                        if sum(nans) > 0:
+                            data_di = torch.masked_select(data_di, ~nans)
+
+                        self.fit_single(d, data_di, goal, index=i)
                 pos += d.domain_size
 
             if isinstance(dists, LikelihoodFlatten):
