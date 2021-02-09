@@ -42,13 +42,14 @@ def get_likelihood(*dist_names, flatten=True):
 
 def get_distribution_by_name(name, *, domain_size=1, ensure_args=True):
     is_gammatrick = name[-1] == '*'
+    is_berntrick = name[-1] == '+' and 'categorical' in name
     size = 0
     available_dists = {
         'normal': Normal, 'lognormal': LogNormal, 'gamma': Gamma, 'exponential': Exponential,
         'bernoulli': Bernoulli, 'poisson': Poisson, 'categorical': Categorical, 'one-hot-categorical': OneHotCategorical
     }
 
-    if is_gammatrick:
+    if is_gammatrick or is_berntrick:
         name = name[:-1]
 
     if 'categorical' in name:
@@ -58,6 +59,8 @@ def get_distribution_by_name(name, *, domain_size=1, ensure_args=True):
 
     if is_gammatrick and 'categorical' in name:
         requested_dist = GammaTrickCategorical(size, ensure_args=ensure_args)
+    elif is_berntrick:
+        requested_dist = BernoulliTrickCategorical(size, ensure_args=ensure_args)
     else:
         if size > 0:
             requested_dist = available_dists[name](size, ensure_args=ensure_args)
@@ -783,6 +786,51 @@ class GammaTrickCategorical(LikelihoodList):
     def instantiate(self, *params):
         if self.training:
             return super(GammaTrickCategorical, self).instantiate(*params)
+
+        params = sum(self.inverse_transform_params(*params), [])
+        instance = self.dist(**self.canonical_params(*params))
+
+        return instance
+
+    def compute_hessian(self, data):
+        raise NotImplementedError
+
+    def compute_lipschitz(self, data, original_hessian):
+        raise NotImplementedError
+
+
+class BernoulliTrickCategorical(LikelihoodList):
+    def __init__(self, size, *, ensure_args=True):
+        super(BernoulliTrickCategorical, self).__init__(*[
+            Bernoulli(domain_size=1, ensure_args=ensure_args) for _ in range(size)
+        ], ensure_args=ensure_args)
+
+    @property
+    def dist(self) -> type(dist.Distribution):
+        if self.training:
+            raise NotImplementedError
+        return dist.OneHotCategorical
+
+    def canonical_params(self, *params):
+        if self.training:
+            return super(BernoulliTrickCategorical, self).canonical_params(*params)
+
+        means = super(BernoulliTrickCategorical, self).canonical_params(*params)
+        means = [x['probs'] for x in means]
+        means = torch.stack(means, dim=-1) if params[0].numel() > 1 else torch.cat(means, dim=-1)
+        discrete_value = ensure(means, constraints.simplex)
+
+        return {'probs': discrete_value}
+
+    @property
+    def canonical_constraints(self):
+        if self.training:
+            raise NotImplementedError
+        return {'probs': constraints.simplex}
+
+    def instantiate(self, *params):
+        if self.training:
+            return super(BernoulliTrickCategorical, self).instantiate(*params)
 
         params = sum(self.inverse_transform_params(*params), [])
         instance = self.dist(**self.canonical_params(*params))
