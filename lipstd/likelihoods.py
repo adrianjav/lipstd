@@ -404,6 +404,9 @@ class LikelihoodList(BaseLikelihood):
     def __getitem__(self, item):
         return self.dist_list[item]
 
+    def __str__(self):
+        return ', '.join([str(d) for d in self])
+
 
 class LikelihoodFlatten(LikelihoodList):
     def __init__(self, *dist_list, ensure_args=True):
@@ -542,6 +545,9 @@ class Normal(ExponentialFamily):
         self.ensure_args = old_value
         return row_1, row_2
 
+    def __str__(self):
+        return 'normal'
+
 
 class LogNormal(Normal):
     @property
@@ -556,6 +562,9 @@ class LogNormal(Normal):
 
     def params_from_data(self, x):
         return super(LogNormal, self).params_from_data(torch.log(x))
+
+    def __str__(self):
+        return 'log-normal'
 
 
 class Gamma(ExponentialFamily):
@@ -593,8 +602,8 @@ class Gamma(ExponentialFamily):
 
         return eta1, eta2
 
-    # def compute_hessian(self, data):
-    #     raise NotImplementedError
+    def __str__(self):
+        return 'gamma'
 
 
 class Exponential(ExponentialFamily):
@@ -619,6 +628,9 @@ class Exponential(ExponentialFamily):
 
     def compute_hessian(self, data):
         raise NotImplementedError
+
+    def __str__(self):
+        return 'exponential'
 
 
 class Bernoulli(ExponentialFamily):
@@ -649,6 +661,9 @@ class Bernoulli(ExponentialFamily):
     def compute_hessian(self, data):
         raise NotImplementedError
 
+    def __str__(self):
+        return 'bernoulli'
+
 
 class Poisson(ExponentialFamily):
     is_discrete = True
@@ -670,6 +685,9 @@ class Poisson(ExponentialFamily):
 
     def compute_hessian(self, data):
         raise NotImplementedError
+
+    def __str__(self):
+        return 'poisson'
 
 
 class GammaTrick(Gamma):
@@ -706,6 +724,9 @@ class GammaTrick(Gamma):
         x = super().inverse_transform_data(x)
         return torch.floor(x - self.constant)
 
+    def __str__(self):
+        return super().__str__() if self.training else f'{str(self.og_dist)}*'
+
 
 class Categorical(ExponentialFamily):
     is_discrete = True
@@ -739,6 +760,9 @@ class Categorical(ExponentialFamily):
     def compute_hessian(self, data):
         raise NotImplementedError
 
+    def __str__(self):
+        return f'categorical({self.size})'
+
 
 class OneHotCategorical(Categorical):
     def __init__(self, size, *, ensure_args=True):
@@ -750,6 +774,9 @@ class OneHotCategorical(Categorical):
 
     def compute_hessian(self, data):
         raise NotImplementedError
+
+    def __str__(self):
+        return f'one-hot-categorical({self.size})'
 
 
 class GammaTrickCategorical(LikelihoodList):
@@ -798,6 +825,9 @@ class GammaTrickCategorical(LikelihoodList):
     def compute_lipschitz(self, data, original_hessian):
         raise NotImplementedError
 
+    def __str__(self):
+        return f'one-hot-categorical({len(self)})*'
+
 
 class BernoulliTrickCategorical(LikelihoodList):
     def __init__(self, size, *, ensure_args=True):
@@ -842,4 +872,7 @@ class BernoulliTrickCategorical(LikelihoodList):
 
     def compute_lipschitz(self, data, original_hessian):
         raise NotImplementedError
+
+    def __str__(self):
+        return f'one-hot-categorical({len(self)})+'
 
