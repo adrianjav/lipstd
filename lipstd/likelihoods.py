@@ -516,10 +516,6 @@ class Normal(ExponentialFamily):
     def dist(self) -> type(dist.Distribution):
         return dist.Normal
 
-    def transform_data(self, x):
-        noise = dist.Beta(1.1, 30).sample(x.size()).to(x.device)
-        return super().transform_data(x + noise)
-
     def canonical_params(self, *params):
         eta1, eta2 = params
         return {'loc': -0.5 * eta1 / eta2, 'scale': torch.sqrt(-0.5 / eta2)}
