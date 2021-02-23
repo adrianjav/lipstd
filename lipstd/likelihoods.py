@@ -609,6 +609,25 @@ class Gamma(ExponentialFamily):
     def __str__(self):
         return 'gamma'
 
+    def compute_hessian(self, data):
+        old_value = self.ensure_args
+        self.ensure_args = False
+
+        params = self.params_from_data(self >> data)
+        params = self.canonical_params(*params)
+
+        row_1 = torch.tensor([
+            (params['concentration'] - 1) * torch.polygamma(1, params['concentration']) - 1.,
+            -params['rate'].reciprocal()
+        ])
+        row_2 = torch.tensor([
+            row_1[1],
+            -params['concentration'] * params['rate'].pow(2).reciprocal()
+        ])
+
+        self.ensure_args = old_value
+        return row_1, row_2
+
 
 class Exponential(ExponentialFamily):
     arg_constraints = [
