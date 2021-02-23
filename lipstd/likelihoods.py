@@ -432,7 +432,7 @@ class LikelihoodFlatten(LikelihoodList):
         self.indexes = build_index(list(dist_list))
 
     def __len__(self):
-        return len(self.indexes) if self.training or not self.flatten else super().__len__()
+        return len(self.indexes) if self.training and self.flatten else super().__len__()
 
     def __getitem__(self, item):
         if not self.training or not self.flatten:
@@ -821,7 +821,11 @@ class GammaTrickCategorical(LikelihoodList):
             return super(GammaTrickCategorical, self).instantiate(*params)
 
         params = sum(self.inverse_transform_params(*params), [])
-        instance = self.dist(**self.canonical_params(*params))
+        for d in self:
+            d._counter = 1
+        instance = self.dist(**self.canonical_params(*params))  # TODO BUG HERE (two ensure_params)
+        for d in self:
+            d._counter = 0
 
         return instance
 
