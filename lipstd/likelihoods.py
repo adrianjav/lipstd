@@ -265,6 +265,10 @@ def _apply(counter_function, as_tensor):
                 else:
                     new_value.append(getattr(d, func.__name__)(*value[pos: pos + counter_function(d)]))
                 pos += counter_function(d)
+            if as_tensor:
+                assert pos == value.size(-1), f'stopped at {pos} instead of {value.size(-1)}'
+            else:
+                assert pos == len(value), f'stopped at {pos} instead of {len(value)}'
             return torch.cat(new_value, dim=-1) if as_tensor else new_value
         return _apply__
     return _apply_
@@ -390,11 +394,11 @@ class LikelihoodList(BaseLikelihood):
 
                     raise e
 
-        new_value, pos = ListWrapper([]), 0
+        new_value, pos = [], 0
         for d in self.dist_list:
             new_value.append(d.instantiate(*params[pos: pos + d.num_params]))
             pos += d.num_params
-        return new_value
+        return ListWrapper(new_value)
 
     def compute_hessian(self, data):
         raise NotImplementedError
