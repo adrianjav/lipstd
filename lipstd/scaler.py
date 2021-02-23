@@ -29,7 +29,7 @@ class BaseScaler(object):
                 scale_d = torch.empty_like(d.scale)
                 for i in range(d.domain_size):
                     data_di = data_d[..., i]
-                    nans = torch.isnan(data_d)
+                    nans = torch.isnan(data_di)
                     if sum(nans) > 0:
                         data_di = torch.masked_select(data_di, ~nans)
 
@@ -104,7 +104,7 @@ class LipschitzScaler(BaseScaler):
             pos = 0
             for d in dists:
                 if isinstance(d, LikelihoodList) and not d.is_discrete:
-                    num_dists = sum([len(x) for x in d if not x.is_discrete])
+                    num_dists = sum([1 for x in d if not x.is_discrete])
                     fit_recursive(d, data[..., pos: pos + d.domain_size], goal / num_dists)
                 else:
                     for i in range(d.domain_size):
@@ -119,6 +119,6 @@ class LipschitzScaler(BaseScaler):
             if isinstance(dists, LikelihoodFlatten):
                 dists.flatten = old_value
 
-        num_dists = sum([d.domain_size for d in self.likelihood if not d.is_discrete])
+        num_dists = sum([1 for d in self.likelihood if not d.is_discrete])
         fit_recursive(self.likelihood, data, self.goal / num_dists)
         return self.likelihood
